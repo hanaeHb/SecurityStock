@@ -19,6 +19,8 @@ public class UserResponseDTO {
     private String lastName;
     private String email;
     private boolean active;
+    private String cin;
+    private String phone;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Set<String> roles;
@@ -121,5 +123,21 @@ public class UserResponseDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getCin() {
+        return cin;
+    }
+
+    public void setCin(String cin) {
+        this.cin = cin;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }

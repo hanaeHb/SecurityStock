@@ -107,6 +107,35 @@ public class UserController {
         return ResponseEntity.ok(userService.assignRoleToUser(userId, roleName));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/user/{id}")
+    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Update basic fields
+        if (updates.containsKey("firstName")) user.setFirstName((String) updates.get("firstName"));
+        if (updates.containsKey("lastName")) user.setLastName((String) updates.get("lastName"));
+        if (updates.containsKey("email")) user.setEmail((String) updates.get("email"));
+        if (updates.containsKey("phone")) user.setPhone((String) updates.get("phone"));
+        if (updates.containsKey("cin")) user.setCin((String) updates.get("cin"));
+
+        // Update roles if provided
+        if (updates.containsKey("roles")) {
+            @SuppressWarnings("unchecked")
+            List<String> rolesList = (List<String>) updates.get("roles");
+            Set<Role> newRoles = rolesList.stream()
+                    .map(roleName -> roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new RuntimeException("Role non trouvé: " + roleName)))
+                    .collect(Collectors.toSet());
+            user.setRoles(newRoles);
+        }
+
+        User updatedUser = userRepository.save(user);
+        UserResponseDTO response = userMapper.Entity_to_DTO(updatedUser);
+        return ResponseEntity.ok(response);
+    }
+
     // --- UPDATE USER STATUS ---
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
@@ -118,6 +147,20 @@ public class UserController {
         user.setActive(active);
         User updatedUser = userRepository.save(user);
 
+        UserResponseDTO response = userMapper.Entity_to_DTO(updatedUser);
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> updateAdminProfile(@PathVariable Integer id, @RequestBody Map<String, String> updates) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        if (updates.containsKey("phone")) user.setPhone(updates.get("phone"));
+        if (updates.containsKey("cin")) user.setCin(updates.get("cin"));
+
+        User updatedUser = userRepository.save(user);
         UserResponseDTO response = userMapper.Entity_to_DTO(updatedUser);
         return ResponseEntity.ok(response);
     }
@@ -159,6 +202,9 @@ public class UserController {
                     .claim("email", user.getEmail())
                     .claim("prenom", user.getFirstName())
                     .claim("nom", user.getLastName())
+                    .claim("phone", user.getPhone())
+                    .claim("cin", user.getCin())
+                    .claim("status", user.isActive())
                     .claim("userId", user.getId())
                     .claim("roles", roles)
                     .claim("permissions", permissions)

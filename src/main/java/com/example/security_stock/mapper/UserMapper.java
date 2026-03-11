@@ -20,6 +20,8 @@ public class UserMapper {
 
         user.setPassword(request.getPassword());
         user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setCin(request.getCin());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setActive(true);
@@ -35,6 +37,8 @@ public class UserMapper {
         response.setEmail(user.getEmail());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
+        response.setCin(user.getCin());
+        response.setPhone(user.getPhone());
         response.setActive(user.isActive());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());

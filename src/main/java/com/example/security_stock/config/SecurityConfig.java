@@ -14,7 +14,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -51,8 +50,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
+    public AuthenticationManager authenticationManager() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return new ProviderManager(authProvider);
     }
 
     // ======================= CONFIGURATION CORS =======================
@@ -61,22 +63,20 @@ public class SecurityConfig {
     // Sans CORS, le navigateur bloque les requêtes pour des raisons de sécurité.
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
 
-        // Origine autorisée (Frontend Angular)
-        config.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        // Origines autorisées
+        config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // React app
 
-        // Méthodes HTTP autorisées (GET, POST, PUT, DELETE, etc.)
-        config.setAllowedMethods(Arrays.asList("*"));
+        // Méthodes HTTP autorisées
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Headers autorisés (Authorization est nécessaire pour JWT)
-        config.setAllowedHeaders(Arrays.asList("*"));
+        // Headers autorisés
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
 
         // Autoriser l'envoi du header Authorization (JWT)
         config.setAllowCredentials(true);
 
-        // Appliquer cette configuration à toutes les routes de l'application
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 

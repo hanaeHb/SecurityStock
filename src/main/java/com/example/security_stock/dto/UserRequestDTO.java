@@ -16,7 +16,9 @@ public class UserRequestDTO {
     private String email;
     private String password;
     private Set<String> role;
+    private String cin;
 
+    private String phone;
 
     public String getEmail() {
         return email;
@@ -58,6 +60,20 @@ public class UserRequestDTO {
         this.role = role;
     }
 
+    public String getCin() {
+        return cin;
+    }
 
+    public void setCin(String cin) {
+        this.cin = cin;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 }
 
