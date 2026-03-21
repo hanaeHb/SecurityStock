@@ -49,7 +49,7 @@ public class UserController {
     private final RefreshTokenService refreshTokenService;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserMapper userMapper; // Injecter ton mapper
+    private final UserMapper userMapper;
 
     public UserController(UserService userService, AuthenticationManager authenticationManager, JwtEncoder jwtEncoder,
                           UserRepository userRepository, RefreshTokenService refreshTokenService,
@@ -168,7 +168,7 @@ public class UserController {
     // --- REGISTER CLIENT ---
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUserClient(@Valid @RequestBody UserRequestDTO request) {
-        request.setRole(Set.of("ADMIN"));
+        request.setRole(Set.of("FOURNISSEUR"));
         UserResponseDTO response = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

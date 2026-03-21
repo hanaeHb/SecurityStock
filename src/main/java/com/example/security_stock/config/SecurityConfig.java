@@ -84,23 +84,35 @@ public class SecurityConfig {
     }
 
     @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                // Activation de CORS dans Spring Security
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(sess ->
                         sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                .authenticationProvider(authenticationProvider())
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v1/users/login").permitAll()
                         .requestMatchers("/v1/users/refresh").permitAll()
                         .requestMatchers("/v1/users/register").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-
+                        .requestMatchers("/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs/swagger-config",
+                                "/actuator/**",
+                                "/eureka/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
@@ -110,7 +122,6 @@ public class SecurityConfig {
 
                 .build();
     }
-
     @Bean
     public JwtEncoder jwtEncoder() {
         JWK jwk = new RSAKey.Builder(rsaKeys.publicKey())
