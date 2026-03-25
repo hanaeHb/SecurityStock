@@ -199,12 +199,10 @@ public class UserController {
                     .expiresAt(now.plus(1, ChronoUnit.HOURS))
                     .subject(authentication.getName())
                     .claim("authorities", authorities)
+                    .claim("userID", user.getId())
                     .claim("email", user.getEmail())
                     .claim("prenom", user.getFirstName())
                     .claim("nom", user.getLastName())
-                    .claim("phone", user.getPhone())
-                    .claim("cin", user.getCin())
-                    .claim("status", user.isActive())
                     .claim("userId", user.getId())
                     .claim("roles", roles)
                     .claim("permissions", permissions)
@@ -232,6 +230,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+
 
     // --- REFRESH TOKEN ---
     @PostMapping("/refresh")

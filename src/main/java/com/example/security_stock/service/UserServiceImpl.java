@@ -68,11 +68,8 @@ public class UserServiceImpl implements UserService {
                 user.getRoles().add(role);
             }
         }
-
-        // Sauvegarder en base
         User savedUser = userRepository.save(user);
 
-        // UTILISER LE MAPPER COMME DANS getAllUsers() POUR AVOIR LA MÊME STRUCTURE
         return userMapper.Entity_to_DTO(savedUser);
     }
 

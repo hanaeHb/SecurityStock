@@ -32,7 +32,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         if (user.getRoles() != null) {
             user.getRoles().forEach(role -> {
-                authorities.add(new SimpleGrantedAuthority(role.getName()));
+                // Ajouter ROLE_ pour Spring Security
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
                 if (role.getPermissions() != null) {
                     role.getPermissions().forEach(perm -> authorities.add(new SimpleGrantedAuthority(perm.getName())));
                 }
