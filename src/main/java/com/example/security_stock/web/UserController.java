@@ -13,8 +13,10 @@ import com.example.security_stock.service.RefreshTokenService;
 import com.example.security_stock.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,6 +33,7 @@ import com.example.security_stock.entities.Role;
 import com.example.security_stock.entities.PermissionEntity;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,10 +67,12 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
     // --- CREATE USER ---
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
-    public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserRequestDTO request) {
+    public ResponseEntity<UserResponseDTO> creatUser(@RequestBody UserRequestDTO request) {
         UserResponseDTO response = userService.createUser(request);
 
         if (!response.isActive()) {
@@ -168,8 +173,8 @@ public class UserController {
     // --- REGISTER CLIENT ---
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUserClient(@Valid @RequestBody UserRequestDTO request) {
-        request.setRole(Set.of("FOURNISSEUR"));
-        UserResponseDTO response = userService.createUser(request);
+        request.setRole(Set.of("Fournisseur"));
+        UserResponseDTO response = userService.createFour(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -203,6 +208,8 @@ public class UserController {
                     .claim("email", user.getEmail())
                     .claim("prenom", user.getFirstName())
                     .claim("nom", user.getLastName())
+                    .claim("cin", user.getCin())
+                    .claim("phone", user.getPhone())
                     .claim("userId", user.getId())
                     .claim("roles", roles)
                     .claim("permissions", permissions)
@@ -218,6 +225,8 @@ public class UserController {
             response.setFirstName(user.getFirstName());
             response.setLastName(user.getLastName());
             response.setActive(user.isActive());
+            response.setCin(user.getCin());
+            response.setPhone(user.getPhone());
             response.setRoles(roles);
             response.setAccessToken(accessToken);
             response.setRefreshToken(refreshToken.getToken());
@@ -258,6 +267,8 @@ public class UserController {
                     .claim("userId", user.getId())
                     .claim("prenom", user.getFirstName())
                     .claim("nom", user.getLastName())
+                    .claim("cin", user.getCin())
+                    .claim("phone", user.getPhone())
                     .claim("roles", roles)
                     .claim("permissions", permissions)
                     .claim("type", "access")
@@ -273,6 +284,8 @@ public class UserController {
             response.setFirstName(user.getFirstName());
             response.setLastName(user.getLastName());
             response.setActive(user.isActive());
+            response.setCin(user.getCin());
+            response.setPhone(user.getPhone());
             response.setRoles(roles);
             response.setAccessToken(newAccessToken);
             response.setRefreshToken(newRefreshToken.getToken());

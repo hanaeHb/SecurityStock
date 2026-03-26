@@ -17,7 +17,6 @@ public class UserRequestDTO {
     private String password;
     private Set<String> role;
     private String cin;
-
     private String phone;
 
     public String getEmail() {

@@ -10,12 +10,13 @@ import com.example.security_stock.repository.RefreshTokenRepository;
 import com.example.security_stock.repository.RoleRepository;
 import com.example.security_stock.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.security_stock.client.UserProfileClient;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,18 +29,23 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserProfileClient userProfileClient;
+    private  EmailService emailService;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            UserMapper userMapper,
-                           PasswordEncoder passwordEncoder, RefreshTokenRepository refreshTokenRepository, UserProfileClient userProfileClient) {
+                           PasswordEncoder passwordEncoder, RefreshTokenRepository refreshTokenRepository, UserProfileClient userProfileClient, EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenRepository = refreshTokenRepository;
         this.userProfileClient = userProfileClient;
+        this.emailService = emailService;
     }
+
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public UserResponseDTO createUser(UserRequestDTO request) {
@@ -69,6 +75,94 @@ public class UserServiceImpl implements UserService {
             }
         }
         User savedUser = userRepository.save(user);
+
+        return userMapper.Entity_to_DTO(savedUser);
+    }
+
+    @Override
+    public UserResponseDTO createFour(UserRequestDTO request) {
+        // Vérifier si email existe déjà
+        if(userRepository.existsByEmail(request.getEmail())){
+            UserResponseDTO response = new UserResponseDTO();
+            response.setEmail(request.getEmail());
+            response.setActive(false);
+            return response;
+        }
+
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setActive(true);
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setCin(request.getCin());
+        user.setPhone(request.getPhone());
+
+        if(request.getRole() != null && !request.getRole().isEmpty()){
+            for (String roleName : request.getRole()) {
+                Role role = roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new RuntimeException("Role non trouvé: " + roleName));
+                user.getRoles().add(role);
+            }
+        }
+        User savedUser = userRepository.save(user);
+        Map<String, Object> event = new HashMap<>();
+        event.put("userId", savedUser.getId());
+        event.put("email", savedUser.getEmail());
+        event.put("firstName", savedUser.getFirstName());
+        event.put("lastName", savedUser.getLastName());
+        event.put("cin", savedUser.getCin());
+        event.put("phone", savedUser.getPhone());
+        event.put("role", "Fournisseur");
+
+        kafkaTemplate.send("fournisseur-registered", event);
+
+        return userMapper.Entity_to_DTO(savedUser);
+    }
+
+    @Override
+    public UserResponseDTO createUserByAdmin(UserRequestDTO request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            UserResponseDTO response = new UserResponseDTO();
+            response.setEmail(request.getEmail());
+            response.setActive(false);
+            return response;
+        }
+
+        // Creer user inactive
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setCin(request.getCin());
+        user.setPhone(request.getPhone());
+        user.setActive(true);
+
+
+        if (request.getRole() != null && !request.getRole().isEmpty()) {
+            for (String roleName : request.getRole()) {
+                Role role = roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new RuntimeException("Role non trouvé: " + roleName));
+                user.getRoles().add(role);
+            }
+        }
+
+        // Verification token
+        String token = UUID.randomUUID().toString();
+        user.setVerificationToken(token);
+
+        User savedUser = userRepository.save(user);
+
+        // Send email notification
+        String verifyLink = "http://localhost:3000/verify?token=" + token;
+        try {
+            emailService.sendEmail(user.getEmail(),
+                    "Activate your account",
+                    "Hello! Click this link to activate your account: " + verifyLink);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return userMapper.Entity_to_DTO(savedUser);
     }

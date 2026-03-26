@@ -15,4 +15,6 @@ public interface UserService {
     UserResponseDTO assignRoleToUser(Integer userId, String roleName);
     UserResponseDTO updateUserStatus(Integer id, Boolean active);
     UserResponseDTO updateUser(Integer id, Map<String, Object> updates);
+    UserResponseDTO createUserByAdmin(UserRequestDTO request);
+    UserResponseDTO createFour(UserRequestDTO request);
 }
