@@ -44,7 +44,8 @@ public class User {
     private LocalDateTime updatedAt;
 
     private String verificationToken;
-
+    @Column(name = "cv_path")
+    private String cvPath;
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     @JoinTable(
             name = "user_roles",
@@ -162,5 +163,12 @@ public class User {
         this.verificationToken = verificationToken;
     }
 
+    public String getCvPath() {
+        return cvPath;
+    }
+
+    public void setCvPath(String cvPath) {
+        this.cvPath = cvPath;
+    }
 }
 

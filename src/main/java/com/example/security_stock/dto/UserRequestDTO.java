@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 @AllArgsConstructor
@@ -18,6 +19,7 @@ public class UserRequestDTO {
     private Set<String> role;
     private String cin;
     private String phone;
+    private MultipartFile cv;
 
     public String getEmail() {
         return email;
@@ -73,6 +75,14 @@ public class UserRequestDTO {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public MultipartFile getCv() {
+        return cv;
+    }
+
+    public void setCv(MultipartFile cv) {
+        this.cv = cv;
     }
 }
 

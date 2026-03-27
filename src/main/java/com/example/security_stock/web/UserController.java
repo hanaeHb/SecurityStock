@@ -31,6 +31,9 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.*;
 import com.example.security_stock.entities.Role;
 import com.example.security_stock.entities.PermissionEntity;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -172,9 +175,10 @@ public class UserController {
 
     // --- REGISTER CLIENT ---
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> registerUserClient(@Valid @RequestBody UserRequestDTO request) {
+    public ResponseEntity<UserResponseDTO> registerUserClient(@ModelAttribute UserRequestDTO request) throws IOException {
         request.setRole(Set.of("Fournisseur"));
-        UserResponseDTO response = userService.createFour(request);
+        MultipartFile cvFile = request.getCv();
+        UserResponseDTO response = userService.createFour(request, cvFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -240,6 +244,18 @@ public class UserController {
         }
     }
 
+    // --- DOWNLOAD CV ---
+    @PreAuthorize("hasRole('Procurement Manager')")
+    @GetMapping("/download/{fileName}")
+    public ResponseEntity<byte[]> downloadCV(@PathVariable String fileName) throws IOException {
+        // Path dyal CV files f server
+        java.nio.file.Path path = java.nio.file.Paths.get("uploads/cv").resolve(fileName).normalize();
+        byte[] data = java.nio.file.Files.readAllBytes(path);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
+                .body(data);
+    }
 
     // --- REFRESH TOKEN ---
     @PostMapping("/refresh")

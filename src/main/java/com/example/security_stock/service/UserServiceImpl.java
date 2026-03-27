@@ -15,7 +15,13 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.security_stock.client.UserProfileClient;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,7 +86,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDTO createFour(UserRequestDTO request) {
+    public UserResponseDTO createFour(UserRequestDTO request, MultipartFile cvFile) throws IOException{
         // Vérifier si email existe déjà
         if(userRepository.existsByEmail(request.getEmail())){
             UserResponseDTO response = new UserResponseDTO();
@@ -105,6 +111,24 @@ public class UserServiceImpl implements UserService {
                 user.getRoles().add(role);
             }
         }
+        if(cvFile != null && !cvFile.isEmpty()){
+            String fileName = System.currentTimeMillis() + "_" + cvFile.getOriginalFilename();
+            Path uploadPath = Paths.get("uploads/cv");
+            if(!Files.exists(uploadPath)){
+                Files.createDirectories(uploadPath);
+            }
+            Path filePath = uploadPath.resolve(fileName);
+            Files.copy(cvFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            user.setCvPath(filePath.toString()); // sauvegarde path f user
+        }
+
+        if(request.getRole() != null && !request.getRole().isEmpty()){
+            for (String roleName : request.getRole()) {
+                Role role = roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new RuntimeException("Role non trouvé: " + roleName));
+                user.getRoles().add(role);
+            }
+        }
         User savedUser = userRepository.save(user);
         Map<String, Object> event = new HashMap<>();
         event.put("userId", savedUser.getId());
@@ -114,6 +138,7 @@ public class UserServiceImpl implements UserService {
         event.put("cin", savedUser.getCin());
         event.put("phone", savedUser.getPhone());
         event.put("role", "Fournisseur");
+        event.put("cvPath", savedUser.getCvPath());
 
         kafkaTemplate.send("fournisseur-registered", event);
 

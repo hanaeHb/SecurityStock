@@ -3,7 +3,9 @@ package com.example.security_stock.service;
 
 import com.example.security_stock.dto.UserRequestDTO;
 import com.example.security_stock.dto.UserResponseDTO;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -16,5 +18,5 @@ public interface UserService {
     UserResponseDTO updateUserStatus(Integer id, Boolean active);
     UserResponseDTO updateUser(Integer id, Map<String, Object> updates);
     UserResponseDTO createUserByAdmin(UserRequestDTO request);
-    UserResponseDTO createFour(UserRequestDTO request);
+    UserResponseDTO createFour(UserRequestDTO request, MultipartFile cvFile) throws IOException;
 }
