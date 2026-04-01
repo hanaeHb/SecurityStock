@@ -145,7 +145,7 @@ public class UserController {
     }
 
     // --- UPDATE USER STATUS ---
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','Procurement Manager')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<UserResponseDTO> updateUserStatus(@PathVariable Integer id, @RequestBody Map<String, Boolean> request) {
         Boolean active = request.get("active");
@@ -248,7 +248,6 @@ public class UserController {
     @PreAuthorize("hasRole('Procurement Manager')")
     @GetMapping("/download/{fileName}")
     public ResponseEntity<byte[]> downloadCV(@PathVariable String fileName) throws IOException {
-        // Path dyal CV files f server
         java.nio.file.Path path = java.nio.file.Paths.get("uploads/cv").resolve(fileName).normalize();
         byte[] data = java.nio.file.Files.readAllBytes(path);
 
