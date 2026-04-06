@@ -57,32 +57,6 @@ public class SecurityConfig {
         return new ProviderManager(authProvider);
     }
 
-    // ======================= CONFIGURATION CORS =======================
-    // Cette configuration permet d'autoriser le Frontend Angular
-    // (http://localhost:4200) à communiquer avec le backend Spring Boot.
-    // Sans CORS, le navigateur bloque les requêtes pour des raisons de sécurité.
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-
-        // Origines autorisées
-        config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // React app
-
-        // Méthodes HTTP autorisées
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-
-        // Headers autorisés
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
-
-        // Autoriser l'envoi du header Authorization (JWT)
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return source;
-    }
-
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -94,7 +68,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(sess ->
